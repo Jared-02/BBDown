@@ -124,20 +124,20 @@ jobs:
         env:
           TZ: Asia/Shanghai
         run: |
-          echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
-          echo "RELEASE_DATE=$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
+          echo "release_date=$(date +"%Y-%m-%d %H:%M")" >> $GITHUB_OUTPUT
+          echo "tag_date=$(date +"%Y%m%d-%H%M")" >> $GITHUB_OUTPUT
           touch release.txt
           echo "${{ github.sha }}" >> release.txt
           echo "status=success" >> $GITHUB_OUTPUT
 
       - name: Pack artifacts
         env:
-          RELEASE_DATE: ${{ env.RELEASE_DATE }}
+          TAG_DATE: ${{ steps.tag.outputs.tag_date }}
         run: |
           ls -R actions
           for dir in actions/*; do
             if [ -d "$dir" ]; then
-              zip -r "${dir}_${RELEASE_DATE}.zip" "$dir"
+              zip -r "${dir}_${TAG_DATE}.zip" "$dir"
             fi
           done
 
@@ -147,6 +147,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.tag.outputs.release_tag }}
+          name: "Auto-Build ${{ steps.tag.outputs.release_date }}"
+          tag_name: ${{ steps.tag.outputs.tag_date }}
           body_path: release.txt
           files: actions/*.zip
